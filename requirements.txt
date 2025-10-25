@@ -11,3 +11,5 @@ uvicorn[standard]==0.38.0
 pwdlib[argon2]
 # use [crypto] for RSA / ECDSA
 PyJWT
+# it imports sqlalchemy as well
+sqlmodel
