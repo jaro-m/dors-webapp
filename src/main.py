@@ -9,7 +9,7 @@ from jwt.exceptions import InvalidTokenError
 from pwdlib import PasswordHash
 from sqlmodel import Session, select
 
-from .db import create_db_and_tables, engine, get_session
+from .db import engine, get_session
 from .models import User, UserInDB, Token, TokenData
 
 SECRET_KEY = getenv("SECRET_KEY", "somethingR43IIyS1lley")
@@ -20,7 +20,6 @@ password_hash = PasswordHash.recommended()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 SessionDep = Annotated[Session, Depends(get_session)]
 app = FastAPI(redirect_slashes=True)
-# db = None
 
 
 def verify_password(plain_password, hashed_password):
@@ -36,6 +35,7 @@ def authenticate_user(username: str, password: str):
 
     if not user:
         return False
+
     if not verify_password(password, user.hashed_password):
         return False
 
@@ -105,11 +105,6 @@ async def get_current_active_user(
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
-
-
-@app.on_event("startup")
-def on_startup():
-    create_db_and_tables()
 
 
 @app.post("/token", include_in_schema=False)

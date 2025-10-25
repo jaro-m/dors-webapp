@@ -1,3 +1,4 @@
+alembic
 # needed for Pydantic EmailStr validation
 email-validator==2.3.0
 # fastapi[standard] includes python-multipart dependency as well

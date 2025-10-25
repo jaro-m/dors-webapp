@@ -103,3 +103,12 @@ class Disease(SQLModel, table=True):
     severity_level: PyEnum = Field(Enum(SeverityLevel), nullable=False)
     lab_results: str = Field(nullable=True)
     treatment_status: PyEnum = Field(Enum(TreatmentStatus), nullable=False)
+
+
+class Report(SQLModel, table=True):
+    id: int = Field(primary_key=True)
+    state: PyEnum = Field(Enum(RaportState), nullable=False)
+
+    reporter_id: int | None = Field(default=None, foreign_key="reporter.id")
+    patient_id: int | None = Field(default=None, foreign_key="patient.id")
+    disease_id: int | None = Field(default=None, foreign_key="disease.id")
