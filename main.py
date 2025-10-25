@@ -2,13 +2,13 @@ from datetime import datetime, timedelta, timezone
 from os import getenv
 from typing import Annotated
 
-import pwdlib
 import jwt
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
-from pydantic import BaseModel
 from pwdlib import PasswordHash
+
+from all_types import User, UserInDB, Token, TokenData
 
 SECRET_KEY = getenv("SECRET_KEY", "somethingR43IIyS1lley")
 ALGORITHM = getenv("ALGORITHM", "HS256")
@@ -36,32 +36,12 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 app = FastAPI(redirect_slashes=True)
 
 
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
-class TokenData(BaseModel):
-    username: str | None = None
-
-
-class User(BaseModel):
-    username: str
-    email: str | None = None
-    full_name: str | None = None
-    disabled: bool | None = None
-
-
-class UserInDB(User):
-    hashed_password: str
+# def fake_hash_password(password: str):
+#     return "fakehashed" + password
 
 
 def verify_password(plain_password, hashed_password):
-    try:
-        return password_hash.verify(plain_password, hashed_password)
-    except pwdlib.exceptions.UnknownHashError:
-        print
+    return password_hash.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password):

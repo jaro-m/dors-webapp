@@ -1,6 +1,12 @@
+# needed for Pydantic EmailStr validation
+email-validator==2.3.0
 # fastapi[standard] includes python-multipart dependency as well
-fastapi[standard]
-uvicorn[standard]
+fastapi[standard]==0.120.0
+# required for PhoneNumbers
+phonenumbers
+# adds phone numbers validation
+pydantic_extra_types==2.10.6
+uvicorn[standard]==0.38.0
 # password hashing
 pwdlib[argon2]
 # use [crypto] for RSA / ECDSA
