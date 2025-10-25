@@ -1,4 +1,7 @@
 # fastapi[standard] includes python-multipart dependency as well
 fastapi[standard]
 uvicorn[standard]
-
+# password hashing
+pwdlib[argon2]
+# use [crypto] for RSA / ECDSA
+PyJWT
