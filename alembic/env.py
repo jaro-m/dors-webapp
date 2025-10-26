@@ -75,7 +75,10 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection,
+            target_metadata=target_metadata,
+            # SQLite related, https://alembic.sqlalchemy.org/en/latest/batch.html
+            render_as_batch=True,
         )
 
         with context.begin_transaction():
