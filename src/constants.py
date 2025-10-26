@@ -1,0 +1,5 @@
+from os import getenv
+
+SECRET_KEY = getenv("SECRET_KEY", "somethingR43IIyS1lley")
+ALGORITHM = getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30)

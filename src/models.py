@@ -6,7 +6,7 @@ from pydantic import EmailStr, computed_field
 from pydantic_extra_types.phone_numbers import PhoneNumber, PhoneNumberValidator
 from sqlalchemy import INTEGER, cast
 from sqlalchemy.orm import column_property, declared_attr
-from sqlmodel import Enum, Field, SQLModel
+from sqlmodel import Enum, Field, ForeignKey, Relationship, SQLModel
 
 PhoneNumberType = Annotated[
     Union[str, PhoneNumber],
@@ -56,17 +56,19 @@ class TokenData(SQLModel):
     username: str | None = None
 
 
-class User(SQLModel, table=True):
-    id: int = Field(primary_key=True)
-    hashed_password: str | None = Field(default=None)
+class UserBase(SQLModel):
     username: str
+    # additional attributes
     full_name: str | None = None
     email: str | None = None
     disabled: bool | None = None
 
 
-class UserInDB(User):
-    hashed_password: str
+class User(UserBase, table=True):
+    __table_args__ = {'extend_existing': True}
+
+    id: int | None = Field(default=None, primary_key=True)
+    hashed_password: str | None = Field(default=None)
 
 
 class ReporterBase(SQLModel):
@@ -80,8 +82,15 @@ class ReporterBase(SQLModel):
 
 
 class Reporter(ReporterBase, table=True):
+    __table_args__ = {'extend_existing': True}
+
     id: int | None = Field(primary_key=True)
     registration_date: datetime = Field(nullable=False)
+
+    reports: list["Report"] = Relationship(
+        back_populates="reporter",
+        sa_relationship=ForeignKey("report.id")
+    )
 
 
 class PatientBase(SQLModel):
@@ -95,6 +104,8 @@ class PatientBase(SQLModel):
 
 
 class Patient(PatientBase, table=True):
+    __table_args__ = {'extend_existing': True}
+
     id: int | None = Field(primary_key=True)
 
     @computed_field(return_type=int)
@@ -116,6 +127,8 @@ class DiseaseBase(SQLModel):
 
 
 class Disease(DiseaseBase, table=True):
+    __table_args__ = {'extend_existing': True}
+
     id: int = Field(primary_key=True)
     date_created: datetime = Field(nullable=False)
     date_updated: datetime | None = Field(default=None, nullable=True)
@@ -131,30 +144,35 @@ class ReportBase(SQLModel):
 
 
 class Report(ReportBase, table=True):
+    __table_args__ = {'extend_existing': True}
+
     id: int | None = Field(default=None, primary_key=True)
     date_created: datetime = Field(nullable=False)
     date_updated: datetime | None = Field(default=None)
     patient_id: int | None = Field(
         default=None,
         foreign_key="patient.id",
-        # constraint_name="patient_id to patient.id"
+        # sa_column_kwargs={"constraint_name": "patient_id to patient.id"},
     )
     disease_id: int | None = Field(
         default=None,
         foreign_key="disease.id",
-        # constraint_name="disease_id to disease.id"
+        # sa_column_kwargs={"constraint_name": "pisease_id to disease.id"},
     )
     updated_by: int | None = Field(
         default=None,
         foreign_key="reporter.id",
-        # constraint_name="updated_by to reporter.id"
+        # sa_column_kwargs={"constraint_name": "updated_by to reporter.id"},
     )
     reporter_id: int | None = Field(
         default=None,
         foreign_key="reporter.id",
-        # constraint_name="reporter_id to reporter.id"
+        # sa_column_kwargs={"constraint_name": "reporter_id to reporter.id"},
     )
 
-    # reporter: Reporter | None = Relationship(back_populates="report")
-    # patient: Patient | None = Relationship(back_populates="report")
-    # disease: Disease | None = Relationship(back_populates="report")
+    reporter: Reporter | None = Relationship(
+        back_populates="reports",
+        sa_relationship=ForeignKey("reporter.id"),
+    )
+    # patient: Patient | None = Relationship(back_populates="patient")
+    # disease: Disease | None = Relationship(back_populates="disease")
