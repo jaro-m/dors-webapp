@@ -218,3 +218,5 @@ __marimo__/
 .streamlit/secrets.toml
 
 thoughts.txt
+scripts/
+certs/
