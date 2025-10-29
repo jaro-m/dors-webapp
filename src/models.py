@@ -2,11 +2,21 @@ from datetime import datetime
 from enum import Enum as PyEnum
 from typing import Annotated, Union
 
-from pydantic import EmailStr, computed_field
+from pydantic import EmailStr, computed_field, validator
 from pydantic_extra_types.phone_numbers import PhoneNumber, PhoneNumberValidator
 from sqlalchemy import INTEGER, cast
 from sqlalchemy.orm import column_property, declared_attr
-from sqlmodel import Enum, Field, ForeignKey, Relationship, SQLModel
+from sqlmodel import (
+    Column,
+    Enum,
+    FetchedValue,
+    Field,
+    ForeignKey,
+    Relationship,
+    SQLModel,
+    TIMESTAMP,
+    text,
+)
 
 PhoneNumberType = Annotated[
     Union[str, PhoneNumber],
@@ -85,11 +95,12 @@ class Reporter(ReporterBase, table=True):
     __table_args__ = {'extend_existing': True}
 
     id: int | None = Field(primary_key=True)
-    registration_date: datetime = Field(nullable=False)
+    date_registration: datetime = Field(nullable=False)
 
     reports: list["Report"] = Relationship(
         back_populates="reporter",
-        sa_relationship=ForeignKey("report.id")
+        sa_relationship=ForeignKey("report.id"),
+        cascade_delete=True,
     )
 
 
@@ -107,6 +118,12 @@ class Patient(PatientBase, table=True):
     __table_args__ = {'extend_existing': True}
 
     id: int | None = Field(primary_key=True)
+
+    @validator('date_of_birth')
+    def check_date(cls, value):
+        if value > datetime.now():
+            raise ValueError("DoB date cannot be in the future.")
+        return value
 
     @computed_field(return_type=int)
     @declared_attr
@@ -130,10 +147,24 @@ class Disease(DiseaseBase, table=True):
     __table_args__ = {'extend_existing': True}
 
     id: int = Field(primary_key=True)
-    date_created: datetime = Field(nullable=False)
-    date_updated: datetime | None = Field(default=None, nullable=True)
+
     created_by: int = Field(nullable=False, foreign_key="reporter.id")
     updated_by: int | None = Field(default=None, foreign_key="reporter.id")
+    date_created: datetime = Field(
+        default=None,
+        sa_column=Column(
+            TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=text("CURRENT_TIMESTAMP"),
+        ))
+    date_updated: datetime | None = Field(
+        default=None,
+        sa_column=Column(
+            TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=text("CURRENT_TIMESTAMP"),
+            server_onupdate=FetchedValue(),
+        ))
 
 
 class ReportBase(SQLModel):
@@ -147,32 +178,28 @@ class Report(ReportBase, table=True):
     __table_args__ = {'extend_existing': True}
 
     id: int | None = Field(default=None, primary_key=True)
-    date_created: datetime = Field(nullable=False)
-    date_updated: datetime | None = Field(default=None)
-    patient_id: int | None = Field(
+
+    date_created: datetime = Field(
         default=None,
-        foreign_key="patient.id",
-        # sa_column_kwargs={"constraint_name": "patient_id to patient.id"},
-    )
-    disease_id: int | None = Field(
+        sa_column=Column(
+            TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=text("CURRENT_TIMESTAMP"),
+        ))
+    date_updated: datetime | None = Field(
         default=None,
-        foreign_key="disease.id",
-        # sa_column_kwargs={"constraint_name": "pisease_id to disease.id"},
-    )
-    updated_by: int | None = Field(
-        default=None,
-        foreign_key="reporter.id",
-        # sa_column_kwargs={"constraint_name": "updated_by to reporter.id"},
-    )
-    reporter_id: int | None = Field(
-        default=None,
-        foreign_key="reporter.id",
-        # sa_column_kwargs={"constraint_name": "reporter_id to reporter.id"},
-    )
+        sa_column=Column(
+            TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=text("CURRENT_TIMESTAMP"),
+            server_onupdate=FetchedValue(),
+        ))
+    patient_id: int | None = Field(default=None, foreign_key="patient.id")
+    disease_id: int | None = Field(default=None, foreign_key="disease.id")
+    updated_by: int | None = Field(default=None, foreign_key="reporter.id")
+    reporter_id: int | None = Field(default=None, foreign_key="reporter.id")
 
     reporter: Reporter | None = Relationship(
-        back_populates="reports",
+        back_populates="report",
         sa_relationship=ForeignKey("reporter.id"),
     )
-    # patient: Patient | None = Relationship(back_populates="patient")
-    # disease: Disease | None = Relationship(back_populates="disease")
