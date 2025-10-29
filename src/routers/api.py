@@ -3,9 +3,10 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import Session, select
+from sqlmodel import Session, desc, select
 
 from ..db import get_session
+from ..dependencies import get_current_user
 from ..helpers import logger
 from ..models import (
     Disease,
@@ -14,9 +15,11 @@ from ..models import (
     PatientBase,
     Report,
     ReportBase,
+    ReportResponse,
     Reporter,
     ReporterBase,
-    RaportStatus,
+    ReportStatus,
+    UserBase,
 )
 
 router = APIRouter(prefix="/api")
@@ -27,7 +30,11 @@ SessionDep = Annotated[Session, Depends(get_session)]
 @router.post(
     "/reports", summary="Create new report", tags=["reports"]
 )
-async def create_report(report: ReportBase, session: SessionDep):
+async def create_report(
+    report: ReportBase,
+    session: SessionDep,
+    current_user: Annotated[UserBase, Depends(get_current_user)],
+):
     logger.info("Creating new Report")
 
     try:
@@ -66,7 +73,10 @@ async def create_report(report: ReportBase, session: SessionDep):
     "/reports/{id}/reporter", summary="Add / update reporter details", tags=["reporter"]
 )
 async def create_reporter(
-    id: int, reporter: ReporterBase, session: SessionDep
+    id: int,
+    reporter: ReporterBase,
+    session: SessionDep,
+    current_user: Annotated[UserBase, Depends(get_current_user)],
 ) -> Reporter:
     logger.info(f"reporter ID: {id}, reporter data: {reporter}")
     reporter_db = session.get(Reporter, id)
@@ -75,9 +85,9 @@ async def create_reporter(
         if not reporter_db:
             # Creating a new Reporter
             reporter_db = Reporter(
-                **reporter.dict(),
+                **reporter.model_dump(),
                 id=id,
-                registration_date=datetime.now()
+                date_registration=datetime.now()
             )
             session.add(reporter_db)
             session.commit()
@@ -119,15 +129,20 @@ async def create_reporter(
 @router.post(
     "/reports/{id}/patient", summary="Add / update patient details", tags=["patient"]
 )
-async def create_patient(id: int, patient: PatientBase, session: SessionDep):
-    logger.info("POST /reports/{id}/patient endpoint with ID:", id)
+async def create_patient(
+    id: int,
+    patient: PatientBase,
+    session: SessionDep,
+    current_user: Annotated[UserBase, Depends(get_current_user)],
+) -> Patient:
+    logger.info(f"POST /reports/{id}/patient")
     patient_db = session.get(Patient, id)
 
     try:
         if not patient_db:
             # Creating a new Patient
             patient_db = Patient(
-                **patient.dict(),
+                **patient.model_dump(),
                 id=id,
             )
             session.add(patient_db)
@@ -162,24 +177,29 @@ async def create_patient(id: int, patient: PatientBase, session: SessionDep):
             detail=str(err),
         ) from None
 
-    return patient
+    return patient_db
 
 
 @router.post(
     "/reports/{id}/disease", summary="Add / update disease details", tags=["disease"]
 )
-async def create_disease(id: int, disease: DiseaseBase, session: SessionDep) -> Disease:
+async def create_disease(
+    id: int,
+    disease: DiseaseBase,
+    session: SessionDep,
+    current_user: Annotated[UserBase, Depends(get_current_user)],
+) -> Disease:
     logger.info(f"Create Disease endpoint, ID: {id}")
     disease_db = session.get(Disease, id)
 
     try:
         if not disease_db:
+            print("--------creating a new one----------")
             # Creating a new Disease record
             disease_db = Disease(
-                **disease.dict(),
+                **disease.model_dump(),
                 id=id,
                 date_created=datetime.now(),
-                # TODO: add authentication to this endpoint and the user/creator data
                 created_by=1
             )
             session.add(disease_db)
@@ -190,9 +210,11 @@ async def create_disease(id: int, disease: DiseaseBase, session: SessionDep) -> 
                 f"Disease <{disease.name}> successfully created"
             )
         else:
+            print("-------- updating an existing one ----------")
             # Updating an existing Disease
             disease_data = disease.model_dump(exclude_unset=True)
-            # TODO: updated_by should come from authentication/authorization process
+            # leave this date unchanged
+            disease_data["date_detected"] = disease_db.date_detected
             disease_db.sqlmodel_update({
                 **disease_data,
                 "updated_by": 1,
@@ -223,7 +245,12 @@ async def create_disease(id: int, disease: DiseaseBase, session: SessionDep) -> 
 
 
 @router.put("/reports/{id}", summary="Update report (draft only)", tags=["reports"])
-async def update_report(id: int, report: ReportBase, session: SessionDep):
+async def update_report(
+    id: int,
+    report: ReportBase,
+    session: SessionDep,
+    current_user: Annotated[UserBase, Depends(get_current_user)],
+):
     logger.info(f"Updating Report with ID: {id}")
     report_db = session.get(Report, id)
 
@@ -233,7 +260,7 @@ async def update_report(id: int, report: ReportBase, session: SessionDep):
             detail=str("Report does not exist"),
         )
 
-    if report_db.status != RaportStatus.draft:
+    if report_db.status != ReportStatus.draft:
         raise HTTPException(
             status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
             detail=str("Report cannot be modified"),
@@ -283,7 +310,7 @@ async def delete_report(id: int, session: SessionDep):
             detail=str("Report does not exist"),
         )
 
-    if report_db.status != RaportStatus.draft:
+    if report_db.status != ReportStatus.draft:
         raise HTTPException(
             status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
             detail=str("Report cannot be modified"),
@@ -314,10 +341,67 @@ async def delete_report(id: int, session: SessionDep):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+@router.get("/reports/recent", summary="Recent submissions", tags=["reports"])
+async def get_recent(
+    session: SessionDep,
+    current_user: Annotated[UserBase, Depends(get_current_user)],
+) -> ReportResponse:
+    logger.info("Recent submission")
+    # try:
+    # Is it only going to return "Submitted" reports?
+    report = session.exec(
+        select(Report)
+            .where(Report.status == ReportStatus.submitted)
+            .order_by(desc(Report.date_updated))
+    ).first()
+    reporter = (
+        session.exec(select(Reporter).where(Reporter.id == report.reporter_id)).first()
+    )
+    patient = session.exec(select(Patient).where(Patient.id == report.patient_id)).first()
+    disease = session.exec(select(Disease).where(Disease.id == report.disease_id)).first()
+    print(f"{reporter}\n{patient}\n{disease}")
+    print()
+    # except Exception as err:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    #         detail=str(err),
+    #     ) from None
+    raport_data = ReportResponse(
+        **{
+            **report.model_dump(),
+            "reporter": reporter,
+            "patient": patient,
+            "disease": disease
+        }
+    )
+    if not report:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str("Reports do not exist"),
+        )
+
+    return raport_data
+
+
 @router.get("/reports/{id}", summary="Get specific report", tags=["reports"])
-async def get_report(id: int, session: SessionDep):
+async def get_report(
+    id: int,
+    session: SessionDep,
+    current_user: Annotated[UserBase, Depends(get_current_user)],
+) -> ReportResponse:
     try:
         report = session.get(Report, id)
+        reporter = (
+            session.exec(
+                select(Reporter).where(Reporter.id == report.reporter_id)
+            ).first()
+        )
+        patient = (
+            session.exec(select(Patient).where(Patient.id == report.patient_id)).first()
+        )
+        disease = (
+            session.exec(select(Disease).where(Disease.id == report.disease_id)).first()
+        )
     except Exception as err:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -330,17 +414,68 @@ async def get_report(id: int, session: SessionDep):
             detail=str("Report does not exist"),
         )
 
-    return report
+    report_data = ReportResponse(
+        **{
+            **report.model_dump(),
+            "reporter": reporter,
+            "patient": patient,
+            "disease": disease
+        }
+    )
+
+    return report_data
 
 
 @router.get("/reports", summary="List reports (paginated)", tags=["reports"])
 async def get_reports(
     session: SessionDep,
+    current_user: Annotated[UserBase, Depends(get_current_user)],
     offset: int = 0,
-    limit: Annotated[int, Query(le=20)] = 20
-) -> list[Report]:
+    limit: Annotated[int, Query(le=20)] = 20,
+) -> list[ReportResponse]:
     try:
         reports = session.exec(select(Report).offset(offset).limit(limit)).all()
+        all_results = []
+        reporter_ids = set()
+        patient_ids = set()
+        disease_ids = set()
+
+        for report in reports:
+            reporter_ids.add(report.reporter_id)
+            patient_ids.add(report.patient_id)
+            disease_ids.add(report.disease_id)
+
+        reporters = (
+            session.exec(select(Reporter).where(Reporter.id.in_(reporter_ids)))
+            .all()
+        )
+        patients = (
+            session.exec(select(Patient).where(Patient.id.in_(patient_ids)))
+            .all()
+        )
+        diseases = (
+            session.exec(select(Disease).where(Disease.id.in_(disease_ids)))
+            .all()
+        )
+
+        for report in reports:
+            reporter = [r for r in reporters if r.id == report.reporter_id][0]
+            patient = [p for p in patients if p.id == report.patient_id][0]
+            disease = [d for d in diseases if d.id == report.disease_id][0]
+            all_results.append(ReportResponse(
+                **{
+                    **report.model_dump(),
+                    "reporter": reporter,
+                    "patient": patient,
+                    "disease": disease,
+                }
+            ))
+
+    except IndexError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="DB data inconsistency"
+        ) from None
     except Exception as err:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -353,11 +488,15 @@ async def get_reports(
             detail=str("Reports do not exist"),
         )
 
-    return reports
+    return all_results
 
 
 @router.get("/reports/{id}/reporter", summary="Get reporter details", tags=["reporter"])
-async def get_reporter(id: int, session: SessionDep) -> Reporter:
+async def get_reporter(
+    id: int,
+    session: SessionDep,
+    current_user: Annotated[UserBase, Depends(get_current_user)],
+) -> Reporter:
     try:
         reporter = session.get(Reporter, id)
     except Exception as err:
@@ -376,7 +515,11 @@ async def get_reporter(id: int, session: SessionDep) -> Reporter:
 
 
 @router.get("/reports/{id}/patient", summary="Get patient details", tags=["patient"])
-async def get_patient(id: int, session: SessionDep):
+async def get_patient(
+    id: int,
+    session: SessionDep,
+    current_user: Annotated[UserBase, Depends(get_current_user)],
+):
     try:
         patient = session.get(Patient, id)
     except Exception as err:
@@ -395,7 +538,11 @@ async def get_patient(id: int, session: SessionDep):
 
 
 @router.get("/reports/{id}/disease", summary="Get disease details", tags=["disease"])
-async def get_disease(id: int, session: SessionDep):
+async def get_disease(
+    id: int,
+    session: SessionDep,
+    current_user: Annotated[UserBase, Depends(get_current_user)],
+):
     try:
         disease = session.get(Disease, id)
     except Exception as err:

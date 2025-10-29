@@ -50,7 +50,7 @@ class TreatmentStatus(PyEnum):
     completed = "Completed"
 
 
-class RaportStatus(PyEnum):
+class ReportStatus(PyEnum):
     draft = "Draft"
     submitted = "Submitted"
     under_review = "Under Review"
@@ -168,7 +168,7 @@ class Disease(DiseaseBase, table=True):
 
 
 class ReportBase(SQLModel):
-    status: RaportStatus = Field(Enum(RaportStatus, nullable=False))
+    status: ReportStatus = Field(Enum(ReportStatus, nullable=False))
 
     patient_id: int | None = Field(default=None, nullable=True)
     disease_id: int | None = Field(default=None, nullable=True)
@@ -203,3 +203,15 @@ class Report(ReportBase, table=True):
         back_populates="report",
         sa_relationship=ForeignKey("reporter.id"),
     )
+
+
+class ReportResponse(ReportBase):
+    id: int
+    date_created: datetime
+    date_updated: datetime
+    reporter_id: int
+    patient_id: int
+    disease_id: int
+    reporter: Reporter
+    patient: Patient
+    disease: Disease

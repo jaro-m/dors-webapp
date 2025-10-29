@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+
+. ./.env
+./ve/bin/python -m pytest ./src/tests
+
+# run coverage
+# ./ve/bin/coverage run --source=plugin_module -m pytest -v src/tests && coverage report -m

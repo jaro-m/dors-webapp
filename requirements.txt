@@ -14,3 +14,7 @@ pwdlib[argon2]
 PyJWT
 # it imports sqlalchemy as well
 sqlmodel
+
+# testing
+freezegun
+pytest
