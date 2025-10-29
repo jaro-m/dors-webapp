@@ -1,0 +1,91 @@
+.stable {
+  border-collapse: collapse;
+  border-bottom: 1px solid rgb(163, 154, 163);
+}
+
+h1, h2 {
+  text-align: center;
+}
+
+html {
+  font-family: "Helvetica", "Arial", sans-serif;
+}
+
+th,
+td {
+  vertical-align: top;
+  padding: 0.3em;
+  border: 1px solid;
+}
+
+tr :nth-child(1) {
+  text-align: left;
+  width: 5%;
+}
+
+tr :nth-child(2) {
+  text-align: left;
+  width: 10%;
+}
+tr :nth-child(3) {
+  text-align: left;
+  width: 15%;
+}
+
+tr :nth-child(4) {
+  text-align: left;
+  width: 15%;
+}
+
+tr :nth-child(5) {
+  text-align: left;
+  width: 15%;
+}
+
+tr :nth-child(6) {
+  text-align: left;
+  width: 20%;
+}
+
+tr :nth-child(7) {
+  text-align: left;
+  width: 15%;
+}
+
+tr :nth-child(8) {
+  text-align: left;
+  width: 15%;
+}
+
+tr :nth-child(9) {
+  text-align: left;
+  width: 15%;
+
+}
+
+table {
+  table-layout: fixed;
+  width: 90%;
+  margin: 10px auto;
+  border-collapse: collapse;
+  border-top: 1px solid #999999;
+  border-bottom: 1px solid #999999;
+  /* cursor: pointer; */
+}
+
+tbody tr:nth-child(odd) {
+  background-color: #eeeeee;
+}
+thead tr {
+  background-color: #7a7a7a;
+}
+
+a {
+  margin: 5px;
+  padding: 0px;
+  text-decoration:wavy;
+  text-align: center;
+  color: blue;
+  border-width: 0px;
+  border-style:none;
+}
