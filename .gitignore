@@ -219,7 +219,7 @@ __marimo__/
 
 thoughts.txt
 scripts/
-certs/
+# certs/
 
 
 # Front-end app related
