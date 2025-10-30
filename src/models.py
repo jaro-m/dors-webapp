@@ -82,7 +82,7 @@ class User(UserBase, table=True):
 
 
 class ReporterBase(SQLModel):
-    username: str
+    username: str = Field(nullable=False)
     hashed_password: str | None
     first_name: str = Field(nullable=False, max_length=50)
     last_name: str = Field(nullable=False, max_length=50)

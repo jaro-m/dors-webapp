@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 
-import { getDisease, getPatient, getReport } from '../api';
+import { getDisease, getPatient, getReport, getReporter } from '../api';
 import EditReporter from './EditReporter';
 import EditPatient from './EditPatient';
 import EditDisease from './EditDisease';
@@ -11,6 +11,7 @@ import './EditReport.css';
 const EditReport = () => {
   let { reportId } = useParams();
   const [report, setReport] = useState();
+  const [reporter, setReporter] = useState();
   const [patient, setPatient] = useState();
   const [disease, setDisease] = useState();
 
@@ -22,19 +23,24 @@ const EditReport = () => {
           if (resp.status === 401 || resp.status === 403) {
             Navigate("/");
           }
-        } else if (resp?.status === 200) {
+        } else if (resp?.data && resp.status === 200) {
           setReport(resp.data);
           console.log({resp}, "Details updated successfully");
 
+          const fetchReporter = async () => {
+            const resp1 = await getReporter(resp.data.reporter_id);
+            setReporter(resp1.data);
+          }
           const fetchPatient = async () => {
-            const resp2 = await getPatient(report.patient_id);
+            const resp2 = await getPatient(resp.data.patient_id);
             setPatient(resp2.data);
           }
           const fetchDisease = async () => {
-            const resp3 = await getDisease(report.disease_id);
+            const resp3 = await getDisease(resp.data.disease_id);
             setDisease(resp3.data);
           }
 
+          fetchReporter();
           fetchPatient();
           fetchDisease();
         }
@@ -45,7 +51,7 @@ const EditReport = () => {
   }, [reportId]);
 
   return (
-    (report?.id !== undefined && patient?.id !== undefined && disease?.id !== undefined)
+    (report?.id !== undefined && reporter?.id !== undefined && patient?.id !== undefined && disease?.id !== undefined)
     ? <><TopHeader /><div className="App">
         <h2>Report details</h2>
         <div className='serv'>
