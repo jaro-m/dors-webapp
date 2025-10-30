@@ -28,6 +28,7 @@ export const getReports = async () => {
 export const getReport = async (id) => {
   const config = {
     headers: {
+      "Access-Control-Allow-Origin": "*",
       "Authorization": `Bearer ${sessionStorage.getItem('access_token')}`,
     }
   }

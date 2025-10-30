@@ -77,7 +77,7 @@ To run the server you can use this tiny script provided to simplify things even 
 It will also export ENV VARS from a `.env` file. If the script does nothing, you might need to make it executable first ():
 
 ```bash
-chmod +x ./run_server.sh
+chmod +x ./run_server
 ```
 
 Once it's up and running you can check it typing this into the internet browser address line:

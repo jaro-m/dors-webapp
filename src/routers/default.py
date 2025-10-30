@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends
 
 from ..dependencies import get_current_active_user
 from ..models import (
-    UserBase,
+    # UserBase,
+    ReporterBase,
 )
 
 
@@ -17,7 +18,7 @@ router = APIRouter(prefix="")
     summary="Just a check, during the development, if the authorization is working"
 )
 async def read_own_items(
-    current_user: Annotated[UserBase, Depends(get_current_active_user)]
+    current_user: Annotated[ReporterBase, Depends(get_current_active_user)]
 ):
     return [{"result": "OK", "current_user": current_user.username}]
 

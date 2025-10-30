@@ -82,6 +82,8 @@ class User(UserBase, table=True):
 
 
 class ReporterBase(SQLModel):
+    username: str
+    hashed_password: str | None
     first_name: str = Field(nullable=False, max_length=50)
     last_name: str = Field(nullable=False, max_length=50)
     email: EmailStr = Field(unique=True, nullable=False)
@@ -94,7 +96,7 @@ class ReporterBase(SQLModel):
 class Reporter(ReporterBase, table=True):
     __table_args__ = {'extend_existing': True}
 
-    id: int | None = Field(primary_key=True)
+    id: int = Field(primary_key=True)
     date_registration: datetime = Field(nullable=False)
 
     reports: list["Report"] = Relationship(

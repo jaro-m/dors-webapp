@@ -1,9 +1,11 @@
 reporters = [
     {
         "id": 1,
+        "username": "johndoe",
+        "hashed_password": "$argon2id$v=19$m=65536,t=3,p=4$wagCPXjifgvUFBzq4hqe3w$CYaIb8sB+wtD+Vu/P4uod1+Qof8h+1g7bbDlBID48Rc",
         "first_name": "John",
         "last_name": "Doe",
-        "email": "johndoe@email.com",
+        "email": "johndoe@example.com",
         "job_title": "Admin",
         "phone_number": "+447987654321",
         "organization_name": "NHS",
@@ -12,6 +14,7 @@ reporters = [
     },
     {
         "id": 2,
+        "username": "john2",
         "first_name": "John 2fd",
         "last_name": "Doe",
         "email": "johndoe2@email.com",
@@ -23,6 +26,7 @@ reporters = [
     },
     {
         "id": 3,
+        "username": "iopablo",
         "first_name": "Pablo",
         "last_name": "Picasso",
         "email": "picasso@internal.com",
@@ -34,6 +38,7 @@ reporters = [
     },
     {
         "id": 4,
+        "username": "matilda",
         "first_name": "Jane",
         "last_name": "Doe",
         "email": "jane@example.com",
@@ -45,6 +50,7 @@ reporters = [
     },
     {
         "id": 5,
+        "username": "theone",
         "first_name": "IDR",
         "last_name": "Third",
         "email": "sir@e-mail.com",
@@ -288,7 +294,7 @@ diseases = [
         "symptoms": "strange ones",
         "severity_level": "low",
         "lab_results": "zzzzzzzzz",
-        "treatment_status": "Completed",
+        "treatment_status": "completed",
         "date_created": "2024-11-16T11:11:11.1234567Z",
         "date_updated": "2025-01-06T11:11:11.1234567Z",
         "created_by": 5,

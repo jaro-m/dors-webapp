@@ -19,7 +19,6 @@ from ..models import (
     Reporter,
     ReporterBase,
     ReportStatus,
-    UserBase,
 )
 
 router = APIRouter(prefix="/api")
@@ -33,7 +32,7 @@ SessionDep = Annotated[Session, Depends(get_session)]
 async def create_report(
     report: ReportBase,
     session: SessionDep,
-    current_user: Annotated[UserBase, Depends(get_current_user)],
+    current_user: Annotated[ReporterBase, Depends(get_current_user)],
 ):
     logger.info("Creating new Report")
 
@@ -76,7 +75,7 @@ async def create_reporter(
     id: int,
     reporter: ReporterBase,
     session: SessionDep,
-    current_user: Annotated[UserBase, Depends(get_current_user)],
+    current_user: Annotated[ReporterBase, Depends(get_current_user)],
 ) -> Reporter:
     logger.info(f"reporter ID: {id}, reporter data: {reporter}")
     reporter_db = session.get(Reporter, id)
@@ -133,7 +132,7 @@ async def create_patient(
     id: int,
     patient: PatientBase,
     session: SessionDep,
-    current_user: Annotated[UserBase, Depends(get_current_user)],
+    current_user: Annotated[ReporterBase, Depends(get_current_user)],
 ) -> Patient:
     logger.info(f"POST /reports/{id}/patient")
     patient_db = session.get(Patient, id)
@@ -187,7 +186,7 @@ async def create_disease(
     id: int,
     disease: DiseaseBase,
     session: SessionDep,
-    current_user: Annotated[UserBase, Depends(get_current_user)],
+    current_user: Annotated[ReporterBase, Depends(get_current_user)],
 ) -> Disease:
     logger.info(f"Create Disease endpoint, ID: {id}")
     disease_db = session.get(Disease, id)
@@ -249,7 +248,7 @@ async def update_report(
     id: int,
     report: ReportBase,
     session: SessionDep,
-    current_user: Annotated[UserBase, Depends(get_current_user)],
+    current_user: Annotated[ReporterBase, Depends(get_current_user)],
 ):
     logger.info(f"Updating Report with ID: {id}")
     report_db = session.get(Report, id)
@@ -344,7 +343,7 @@ async def delete_report(id: int, session: SessionDep):
 @router.get("/reports/recent", summary="Recent submissions", tags=["reports"])
 async def get_recent(
     session: SessionDep,
-    current_user: Annotated[UserBase, Depends(get_current_user)],
+    current_user: Annotated[ReporterBase, Depends(get_current_user)],
 ) -> ReportResponse:
     logger.info("Recent submission")
     # try:
@@ -387,7 +386,7 @@ async def get_recent(
 async def get_report(
     id: int,
     session: SessionDep,
-    current_user: Annotated[UserBase, Depends(get_current_user)],
+    current_user: Annotated[ReporterBase, Depends(get_current_user)],
 ) -> ReportResponse:
     try:
         report = session.get(Report, id)
@@ -429,7 +428,7 @@ async def get_report(
 @router.get("/reports", summary="List reports (paginated)", tags=["reports"])
 async def get_reports(
     session: SessionDep,
-    current_user: Annotated[UserBase, Depends(get_current_user)],
+    current_user: Annotated[ReporterBase, Depends(get_current_user)],
     offset: int = 0,
     limit: Annotated[int, Query(le=20)] = 20,
 ) -> list[ReportResponse]:
@@ -495,7 +494,7 @@ async def get_reports(
 async def get_reporter(
     id: int,
     session: SessionDep,
-    current_user: Annotated[UserBase, Depends(get_current_user)],
+    current_user: Annotated[ReporterBase, Depends(get_current_user)],
 ) -> Reporter:
     try:
         reporter = session.get(Reporter, id)
@@ -518,7 +517,7 @@ async def get_reporter(
 async def get_patient(
     id: int,
     session: SessionDep,
-    current_user: Annotated[UserBase, Depends(get_current_user)],
+    current_user: Annotated[ReporterBase, Depends(get_current_user)],
 ):
     try:
         patient = session.get(Patient, id)
@@ -541,7 +540,7 @@ async def get_patient(
 async def get_disease(
     id: int,
     session: SessionDep,
-    current_user: Annotated[UserBase, Depends(get_current_user)],
+    current_user: Annotated[ReporterBase, Depends(get_current_user)],
 ):
     try:
         disease = session.get(Disease, id)

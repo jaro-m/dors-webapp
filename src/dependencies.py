@@ -10,9 +10,11 @@ from .constants import ALGORITHM, SECRET_KEY
 from .db import engine
 from .helpers import logger
 from .models import (
+    Reporter,
+    ReporterBase,
     TokenData,
-    User,
-    UserBase,
+    # User,
+    # UserBase,
 )
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -20,7 +22,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def get_user(username: str):
     with Session(engine) as session:
-        statement = select(User).where(User.username == username)
+        statement = select(Reporter).where(Reporter.username == username)
         user = session.exec(statement).first()
 
         if not user:
@@ -58,11 +60,11 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     if user is None:
         raise credentials_exception
 
-    return UserBase(**user.dict())
+    return ReporterBase(**user.dict())
 
 
 async def get_current_active_user(
-    current_user: Annotated[UserBase, Depends(get_current_user)],
+    current_user: Annotated[ReporterBase, Depends(get_current_user)],
 ):
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
