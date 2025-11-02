@@ -23,7 +23,6 @@ const Reporter = () => {
   return (
     (reporter?.id)
     ? <><TopHeader /><div className="App">
-        <h2>Reporter details</h2>
         <ReporterForm key={`reporter-${reporter.id}`} reporter={reporter} />
       </div></>
     : <div className='spinner'></div>

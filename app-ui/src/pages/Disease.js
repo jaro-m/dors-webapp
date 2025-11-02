@@ -24,7 +24,6 @@ const Disease = () => {
   return (
     (disease?.id)
     ? <><TopHeader /><div className="App">
-        <h2>Disease details</h2>
         <DiseaseForm key={`reporter-${disease.id}`} disease={disease} />
       </div></>
     : <div className='spinner'></div>

@@ -18,8 +18,9 @@ const PatientForm = ({patient}) => {
           .max(30, 'Must be 30 characters or less')
           .required('Required'),
         gender: Yup.string()
-          .max(20, 'Must be 20 characters or less')
-          .required('Required'),
+          .required()
+          .oneOf(["Female", "Male", "Other"])
+          .label("Select Gender"),
         medical_record_number: Yup.string()
           .max(20, 'Must be 20 characters or less')
           .required('Required'),
@@ -29,12 +30,6 @@ const PatientForm = ({patient}) => {
         emergency_contact: Yup.string()
           .max(20, 'Must be 20 characters or less')
           .required('Required'),
-        // age: Yup.string()
-        //   .max(20, 'Must be 20 characters or less')
-        //   .required('Required'),
-        // id: Yup.string()
-        //   .max(20, 'Must be 20 characters or less')
-        //   .required('Required'),
       })}
       onSubmit={(values, { setSubmitting }) => {
         postPatient(values).then(async (data) => {
@@ -50,7 +45,7 @@ const PatientForm = ({patient}) => {
       }}
     >
       <Form className='flex-container'>
-        <p>Patient</p>
+        <h3>Patient details</h3>
 
         <div className='flex-row'>
           <label htmlFor="id">Id</label>
@@ -76,11 +71,12 @@ const PatientForm = ({patient}) => {
           <ErrorMessage name="date_of_birth" />
         </div>
 
-        <div className='flex-row'>
-          <label htmlFor="gender">Gender</label>
-          <Field name="gender" type="text" />
-          <ErrorMessage name="gender" />
-        </div>
+        <label className="formfield-label" htmlFor="gender">Gender</label>
+         <Field name="gender" as="select" className="flex-row select-button">
+          <option value="Female">Female</option>
+          <option value="Male">Male</option>
+          <option value="Other">Other</option>
+        </Field>
 
         <div className='flex-row'>
           <label htmlFor="patient_address">Patient Address</label>

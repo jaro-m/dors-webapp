@@ -5,14 +5,24 @@ export const Api = axios.create({
 });
 
 
-export const getReports = async () => {
+const sendRequest = async (method, endpoint, data = {}) => {
   const config = {
     headers: {
       "Authorization": `Bearer ${sessionStorage.getItem('access_token')}`,
     }
   }
   try {
-    const result = await Api.get(`/reports`, config);
+    let result = {};
+    if (method.toLowerCase() === "get") {
+      result =  await Api.get(endpoint, config);
+    } else if (method.toLowerCase() === "post") {
+      result = await Api.post(endpoint, data, config);;
+    } else if (method.toLowerCase() === "put") {
+      result = await Api.put(endpoint, data, config)
+    } else {
+      console.log(`incorrect method: ${method}`);
+      return { error: `incorrect method: ${method}`};
+    }
     return result;
   } catch(err) {
     console.log({ err }, "API Error");
@@ -23,191 +33,55 @@ export const getReports = async () => {
     console.log({ err });
     return({error: err});
   }
+};
+
+export const getReports = async () => {
+  const result = await sendRequest('GET', '/reports');
+  return result;
 };
 
 export const getReport = async (id) => {
-  const config = {
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Authorization": `Bearer ${sessionStorage.getItem('access_token')}`,
-    }
-  }
-  try {
-    const result = await Api.get(`/reports/${id}`, config);
-    return result;
-  } catch(err) {
-    console.log({ err }, "API Error");
-    if (err?.status && (err.status === 401 || err.status === 403)) {
-      sessionStorage.removeItem('access_token')
-      return { error: "not authorized"};
-    }
-    console.log({ err });
-    return({error: err});
-  }
-};
-
-export const getRecent = async (id) => {
-  const config = {
-    headers: {
-      "Authorization": `Bearer ${sessionStorage.getItem('access_token')}`,
-    }
-  }
-  try {
-    const result = await Api.get(`/reports/recent`, config);
-    return result;
-  } catch(err) {
-    console.log({ err }, "API Error");
-    if (err?.status && (err.status === 401 || err.status === 403)) {
-      sessionStorage.removeItem('access_token')
-      return { error: "not authorized"};
-    }
-    console.log({ err });
-    return({error: err});
-  }
+  const result = await sendRequest('GET', `/reports/${id}`);
+  return result;
 };
 
 export const getReporter = async (id) => {
-  console.log(`getReporter API func(), ID =====>>>>> ${id}`);
-  const config = {
-    headers: {
-      "Authorization": `Bearer ${sessionStorage.getItem('access_token')}`,
-    }
-  }
-  try {
-    const result = await Api.get(`/reports/${id}/reporter`, config);
-    return result;
-  } catch(err) {
-    console.log({ err }, "API Error");
-    if (err?.status && (err.status === 401 || err.status === 403)) {
-      sessionStorage.removeItem('access_token')
-      return { error: "not authorized"};
-    }
-    console.log({ err });
-    return({error: err});
-  }
+  const result = await sendRequest('GET', `/reports/${id}/reporter`);
+  return result;
 };
 
 export const getPatient = async (id) => {
-  const config = {
-    headers: {
-      "Authorization": `Bearer ${sessionStorage.getItem('access_token')}`,
-    }
-  }
-  try {
-    const result = await Api.get(`/reports/${id}/patient`, config);
-    return result;
-  } catch(err) {
-    console.log({ err }, "API Error");
-    if (err?.status && (err.status === 401 || err.status === 403)) {
-      sessionStorage.removeItem('access_token')
-      return { error: "not authorized"};
-    }
-    console.log({ err });
-    return({error: err});
-  }
+  const result = await sendRequest('GET', `/reports/${id}/patient`);
+  return result;
 };
 
 export const getDisease = async (id) => {
-  const config = {
-    headers: {
-      "Authorization": `Bearer ${sessionStorage.getItem('access_token')}`,
-    }
-  }
-  try {
-    const result = await Api.get(`/reports/${id}/disease`, config);
-    return result;
-  } catch(err) {
-    console.log({ err }, "API Error");
-    if (err?.status && (err.status === 401 || err.status === 403)) {
-      sessionStorage.removeItem('access_token')
-      return { error: "not authorized"};
-    }
-    console.log({ err });
-    return({error: err});
-  }
+  const result = await sendRequest('GET', `/reports/${id}/disease`);
+  return result;
+};
+
+export const getRecent = async () => {
+  const result = await sendRequest('GET', '/reports/recent');
+  return result;
 };
 
 export const postReporter = async (reporter) => {
-  const config = {
-    headers: {
-      "Authorization": `Bearer ${sessionStorage.getItem('access_token')}`,
-    }
-  }
-  console.log({ reporter }, "POST reporter data");
-  try {
-    const result = await Api.post(`/reports/${reporter.id}/reporter`, reporter, config);
-    return result;
-  } catch(err) {
-    console.log({ err }, "API Error");
-    if (err?.status && (err.status === 401 || err.status === 403)) {
-      sessionStorage.removeItem('access_token')
-      return { error: "not authorized"};
-    }
-    console.log({ err });
-    return({error: err});
-  }
+  const result = await sendRequest('post', `/reports/${reporter.id}/reporter`, reporter);
+  return result;
 };
 
 export const postPatient = async (patient) => {
-  const config = {
-    headers: {
-      "Authorization": `Bearer ${sessionStorage.getItem('access_token')}`,
-    }
-  }
-  console.log({ patient }, "POST patient data");
-  try {
-    const result = await Api.post(`/reports/${patient.id}/patient`, patient, config);
-    return result;
-  } catch(err) {
-    console.log({ err }, "API Error");
-    if (err?.status && (err.status === 401 || err.status === 403)) {
-      sessionStorage.removeItem('access_token')
-      return { error: "not authorized"};
-    }
-    console.log({ err });
-    return({error: err});
-  }
+  const result = await sendRequest('post', `/reports/${patient.id}/patient`, patient);
+  return result;
 };
 
 export const postDisease = async (disease) => {
-  const config = {
-    headers: {
-      "Authorization": `Bearer ${sessionStorage.getItem('access_token')}`,
-    }
-  }
-  console.log({ disease }, "POST disease data");
-  try {
-    const result = await Api.post(`/reports/${disease.id}/disease`, disease, config);
+    const result = await Api.post('post', `/reports/${disease.id}/disease`, disease);
     return result;
-  } catch(err) {
-    console.log({ err }, "API Error");
-    if (err?.status && (err.status === 401 || err.status === 403)) {
-      sessionStorage.removeItem('access_token')
-      return { error: "not authorized"};
-    }
-    console.log({ err });
-    return({error: err});
-  }
 };
 
 export const putReport = async (report) => {
-  const config = {
-    headers: {
-      "Authorization": `Bearer ${sessionStorage.getItem('access_token')}`,
-    }
-  }
-  console.log({ report }, "PUT report data");
-  try {
-    const result = await Api.put(`/reports/${report.id}`, report, config);
-    return result;
-  } catch(err) {
-    console.log({ err }, "API Error");
-    if (err?.status && (err.status === 401 || err.status === 403)) {
-      sessionStorage.removeItem('access_token')
-      return { error: "not authorized"};
-    }
-    console.log({ err });
-    return({error: err});
-  }
+  const result = await Api.put(`/reports/${report.id}`, report);
+  return result;
 };
 

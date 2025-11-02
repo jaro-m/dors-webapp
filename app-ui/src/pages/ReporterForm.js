@@ -42,7 +42,7 @@ const ReporterForm = ({reporter}) => {
       }}
     >
       <Form className='flex-container'>
-        <p>Reporter</p>
+        <h3>Reporter details</h3>
 
         <div className='flex-row'>
           <label htmlFor="id">Id</label>

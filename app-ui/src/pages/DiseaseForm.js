@@ -11,9 +11,6 @@ const DiseaseForm = ({disease}) => {
     <Formik
       initialValues={{...disease, switch: true }}
       validationSchema={Yup.object({
-        // id: Yup.string()
-        //   .max(15, 'Must be 15 characters or less')
-        //   .required('Required'),
         category: Yup.string()
           .max(20, 'Must be 20 characters or less')
           .required('Required'),
@@ -32,18 +29,6 @@ const DiseaseForm = ({disease}) => {
         treatment_status: Yup.string()
           .max(20, 'Must be 20 characters or less')
           .required('Required'),
-        // created_by: Yup.string()
-        //   .max(20, 'Must be 20 characters or less')
-        //   .required('Required'),
-        // updated_by: Yup.string()
-        //   .max(20, 'Must be 20 characters or less')
-        //   .required('Required'),
-        // date_created: Yup.string()
-        //   .max(30, 'Must be 30 characters or less')
-        //   .required('Required'),
-        // date_updated: Yup.string()
-        //   .max(30, 'Must be 30 characters or less')
-        //   .required('Required'),
       })}
       onSubmit={(values, { setSubmitting }) => {
         postDisease(values).then(async (data) => {
@@ -59,12 +44,7 @@ const DiseaseForm = ({disease}) => {
       }}
     >
       <Form className='flex-container'>
-        <p>Disease</p>
-
-        {/* <div className='flex-row'>
-          <label htmlFor='switch'>Read/Write</label>
-          <Field name="switch" type="radio" onClick={() => setWritable(!writable)}/>
-        </div> */}
+        <h3>Disease details</h3>
 
         <div className='flex-row'>
           <label htmlFor="id">Id</label>

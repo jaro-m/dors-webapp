@@ -23,7 +23,6 @@ const Patient = () => {
   return (
     (patient?.id)
     ? <><TopHeader /><div className="App">
-        <h2>Patient details</h2>
         <PatientForm key={`patient-${patient.id}`} patient={patient} />
       </div></>
     : <div className='spinner'></div>

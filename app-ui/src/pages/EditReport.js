@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { getDisease, getPatient, getReport, getReporter } from '../api';
 import EditReporter from './EditReporter';
 import EditPatient from './EditPatient';
 import EditDisease from './EditDisease';
+import ReportStatusSubmit from './ReportStatusSubmit';
 import TopHeader from './Header';
+import Home from './Home';
+import Spinner from './Spinner';
 import './EditReport.css';
 
 const EditReport = () => {
@@ -14,14 +17,16 @@ const EditReport = () => {
   const [reporter, setReporter] = useState();
   const [patient, setPatient] = useState();
   const [disease, setDisease] = useState();
+  const [toLogin, setToLogin] = useState(false);
 
   useEffect(() => {
     const fetchReport = async () => {
       getReport(reportId).then(async (resp) => {
         if (resp?.error) {
-          console.log(`Handle this error, message: ${resp.error?.message ? resp.error?.message : resp.error }`);
-          if (resp.status === 401 || resp.status === 403) {
-            Navigate("/");
+          console.log(`Handle this error: ${resp.error?.message ? resp.error?.message : resp.error }`);
+          if (resp.error === "not authorized") {
+            sessionStorage.removeItem("access-token");
+            setToLogin(true);
           }
         } else if (resp?.data && resp.status === 200) {
           setReport(resp.data);
@@ -51,34 +56,28 @@ const EditReport = () => {
   }, [reportId]);
 
   return (
-    (report?.id !== undefined && reporter?.id !== undefined && patient?.id !== undefined && disease?.id !== undefined)
-    ? <><TopHeader /><div className="App">
-        <h2>Report details</h2>
-        <div className='serv'>
-          <ul>
-            <li>
-              <EditReporter key={`report-r-${report.id}`} reporter={report} />
-            </li>
-            <li>
-              <EditPatient key={`patient-r-${report.id}`} patient={patient} />
-            </li>
-            <li>
-              <EditDisease key={`disease-r-${report.id}`} disease={disease} />
-            </li>
-          </ul>
-        </div>
-      </div></>
-    : <div className='spinner'></div>
+    (toLogin) ? <Home /> :
+      (report?.id !== undefined && reporter?.id !== undefined && patient?.id !== undefined && disease?.id !== undefined)
+      ? <><TopHeader /><div className="App">
+          <h2>Report details</h2>
+          <div className='serv'>
+            <ul>
+              <li>
+                <EditReporter key={`report-r-${report.id}`} reporter={reporter} />
+              </li>
+              <li>
+                <EditPatient key={`patient-r-${report.id}`} patient={patient} />
+              </li>
+              <li>
+                <EditDisease key={`disease-r-${report.id}`} disease={disease} />
+              </li>
+            </ul>
+          </div>
+          <hr />
+          <ReportStatusSubmit key={`report-status-${report.id}`} report={report} />
+        </div></>
+      : <Spinner />
   )
-
-  // return (
-  //   (report?.id && patient?.id && disease?.id)
-  //   ? <><TopHeader /><div className="App">
-  //       <h2>Report details</h2>
-  //       <EditReportDetails key={`report-${report.id}`} report={report} />
-  //     </div></>
-  //   : <div className='spinner'></div>
-  // )
 };
 
 export default EditReport;

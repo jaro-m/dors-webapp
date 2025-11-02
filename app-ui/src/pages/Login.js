@@ -17,8 +17,6 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({ formData }, "formData in the component");
-
     const requestBody = new FormData()
 
     try {
@@ -40,7 +38,7 @@ const Login = () => {
     : (
       <div>
         <h1>Login to auhtorize the connections</h1>
-        <div className='flex-container'>
+        <div className='flex-container-login'>
           <form onSubmit={handleSubmit}>
             <label>
               <p className='flex-row'>username:</p>
@@ -68,7 +66,7 @@ const Login = () => {
               <button className='flex-button' type="submit">Submit</button>
             </div>
           </form>
-          {responseMessage && <p>{responseMessage}</p>}
+          {responseMessage && <p style={ {color: 'red'} }>{responseMessage}</p>}
         </div>
       </div>
     );
