@@ -60,7 +60,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     if user is None:
         raise credentials_exception
 
-    return ReporterBase(**user.dict())
+    return Reporter(**user.dict())
 
 
 async def get_current_active_user(

@@ -97,8 +97,14 @@ class Reporter(ReporterBase, table=True):
     __table_args__ = {'extend_existing': True}
 
     id: int = Field(primary_key=True)
-    date_registration: datetime = Field(nullable=False)
-
+    date_registration: datetime = Field(
+        default=None,
+        sa_column=Column(
+            TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=text("CURRENT_TIMESTAMP"),
+        )
+    )
     reports: list["Report"] = Relationship(
         back_populates="reporter",
         sa_relationship=ForeignKey("report.id"),
@@ -158,7 +164,8 @@ class Disease(DiseaseBase, table=True):
             TIMESTAMP(timezone=True),
             nullable=False,
             server_default=text("CURRENT_TIMESTAMP"),
-        ))
+        )
+    )
     date_updated: datetime | None = Field(
         default=None,
         sa_column=Column(
@@ -166,7 +173,8 @@ class Disease(DiseaseBase, table=True):
             nullable=False,
             server_default=text("CURRENT_TIMESTAMP"),
             server_onupdate=FetchedValue(),
-        ))
+        )
+    )
 
 
 class ReportBase(SQLModel):
@@ -187,7 +195,8 @@ class Report(ReportBase, table=True):
             TIMESTAMP(timezone=True),
             nullable=False,
             server_default=text("CURRENT_TIMESTAMP"),
-        ))
+        )
+    )
     date_updated: datetime | None = Field(
         default=None,
         sa_column=Column(
@@ -195,7 +204,8 @@ class Report(ReportBase, table=True):
             nullable=False,
             server_default=text("CURRENT_TIMESTAMP"),
             server_onupdate=FetchedValue(),
-        ))
+        )
+    )
     patient_id: int | None = Field(default=None, foreign_key="patient.id")
     disease_id: int | None = Field(default=None, foreign_key="disease.id")
     updated_by: int | None = Field(default=None, foreign_key="reporter.id")

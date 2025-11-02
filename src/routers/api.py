@@ -26,31 +26,11 @@ router = APIRouter(prefix="/api")
 SessionDep = Annotated[Session, Depends(get_session)]
 
 
-@router.post(
-    "/reports", summary="Create new report", tags=["reports"]
-)
-async def create_report(
-    report: ReportBase,
-    session: SessionDep,
-    current_user: Annotated[ReporterBase, Depends(get_current_user)],
-):
-    logger.info("Creating new Report")
-
+async def add_and_refresh_from_db(session, entity):
     try:
-        # Creating a new Reporter
-        report_db = Report(
-            **report.dict(),
-            date_created=datetime.now(),
-            # TODO: Authorized user ID
-            reporter_id=1,
-        )
-        session.add(report_db)
+        session.add(entity)
         session.commit()
-        session.refresh(report_db)
-
-        logger.info(
-            "Report successfully created"
-        )
+        session.refresh(entity)
     except IntegrityError as err:
         session.rollback()
         logger.error(str(err.args))
@@ -64,6 +44,31 @@ async def create_report(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(err),
         ) from None
+
+    return entity
+
+
+@router.post(
+    "/reports", summary="Create new report", tags=["reports"]
+)
+async def create_report(
+    report: ReportBase,
+    session: SessionDep,
+    current_user: Annotated[ReporterBase, Depends(get_current_user)],
+):
+    logger.info("Creating new Report")
+
+    # Creating a new Reporter
+    report_db = Report(
+        **report.dict(),
+        # TODO: Authorized user ID
+        reporter_id=current_user.id,
+    )
+    await add_and_refresh_from_db(session, report_db)
+
+    logger.info(
+        "Report successfully created"
+    )
 
     return report_db
 
@@ -80,47 +85,29 @@ async def create_reporter(
     logger.info(f"reporter ID: {id}, reporter data: {reporter}")
     reporter_db = session.get(Reporter, id)
 
-    try:
-        if not reporter_db:
-            # Creating a new Reporter
-            reporter_db = Reporter(
-                **reporter.model_dump(),
-                id=id,
-                date_registration=datetime.now()
-            )
-            session.add(reporter_db)
-            session.commit()
-            session.refresh(reporter_db)
+    if not reporter_db:
+        # Creating a new Reporter
+        reporter_db = Reporter(
+            **reporter.model_dump(),
+            id=id,
+            date_registration=datetime.now()
+        )
+        await add_and_refresh_from_db(session, reporter_db)
 
-            logger.info(
-                f"Reporter {reporter.first_name} "
-                f"{reporter.last_name} successfully created"
-            )
-        else:
-            # Updating an existing Reporter
-            reporter_data = reporter.model_dump(exclude_unset=True)
-            reporter_db.sqlmodel_update(reporter_data)
-            session.add(reporter_db)
-            session.commit()
-            session.refresh(reporter_db)
+        logger.info(
+            f"Reporter {reporter.first_name} "
+            f"{reporter.last_name} successfully created"
+        )
+    else:
+        # Updating an existing Reporter
+        reporter_data = reporter.model_dump(exclude_unset=True)
+        reporter_db.sqlmodel_update(reporter_data)
+        await add_and_refresh_from_db(session, reporter_db)
 
-            logger.info(
-                f"Reporter {reporter.first_name} "
-                f"{reporter.last_name} successfully updated"
-            )
-    except IntegrityError as err:
-        session.rollback()
-        logger.error(str(err.args))
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(err.args[0]),
-        ) from None
-    except Exception as err:
-        session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(err),
-        ) from None
+        logger.info(
+            f"Reporter {reporter.first_name} "
+            f"{reporter.last_name} successfully updated"
+        )
 
     return reporter_db
 
@@ -137,44 +124,26 @@ async def create_patient(
     logger.info(f"POST /reports/{id}/patient")
     patient_db = session.get(Patient, id)
 
-    try:
-        if not patient_db:
-            # Creating a new Patient
-            patient_db = Patient(
-                **patient.model_dump(),
-                id=id,
-            )
-            session.add(patient_db)
-            session.commit()
-            session.refresh(patient_db)
+    if not patient_db:
+        # Creating a new Patient
+        patient_db = Patient(
+            **patient.model_dump(),
+            id=id,
+        )
+        await add_and_refresh_from_db(session, patient_db)
 
-            logger.info(
-                f"Patient {patient.first_name} {patient.last_name} successfully created"
-            )
-        else:
-            # Updating an existing Patient
-            patient_data = patient.model_dump(exclude_unset=True)
-            patient_db.sqlmodel_update(patient_data)
-            session.add(patient_db)
-            session.commit()
-            session.refresh(patient_db)
+        logger.info(
+            f"Patient {patient.first_name} {patient.last_name} successfully created"
+        )
+    else:
+        # Updating an existing Patient
+        patient_data = patient.model_dump(exclude_unset=True)
+        patient_db.sqlmodel_update(patient_data)
+        await add_and_refresh_from_db(session, patient_db)
 
-            logger.info(
-                f"Patient {patient.first_name} {patient.last_name} successfully updated"
-            )
-    except IntegrityError as err:
-        session.rollback()
-        logger.error(str(err.args))
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(err.args[0]),
-        ) from None
-    except Exception as err:
-        session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(err),
-        ) from None
+        logger.info(
+            f"Patient {patient.first_name} {patient.last_name} successfully updated"
+        )
 
     return patient_db
 
@@ -191,52 +160,34 @@ async def create_disease(
     logger.info(f"Create Disease endpoint, ID: {id}")
     disease_db = session.get(Disease, id)
 
-    try:
-        if not disease_db:
-            # Creating a new Disease record
-            disease_db = Disease(
-                **disease.model_dump(),
-                id=id,
-                date_created=datetime.now(),
-                created_by=1
-            )
-            session.add(disease_db)
-            session.commit()
-            session.refresh(disease_db)
+    # try:
+    if not disease_db:
+        # Creating a new Disease record
+        disease_db = Disease(
+            **disease.model_dump(),
+            id=id,
+            created_by=current_user.id
+        )
+        await add_and_refresh_from_db(session, disease_db)
 
-            logger.info(
-                f"Disease <{disease.name}> successfully created"
-            )
-        else:
-            # Updating an existing Disease
-            disease_data = disease.model_dump(exclude_unset=True)
-            # leave this date unchanged
-            disease_data["date_detected"] = disease_db.date_detected
-            disease_db.sqlmodel_update({
-                **disease_data,
-                "updated_by": 1,
-                "date_updated": datetime.now()
-            })
-            session.add(disease_db)
-            session.commit()
-            session.refresh(disease_db)
+        logger.info(
+            f"Disease <{disease.name}> successfully created"
+        )
+    else:
+        # Updating an existing Disease
+        disease_data = disease.model_dump(exclude_unset=True)
+        # leave this date unchanged
+        disease_data["date_detected"] = disease_db.date_detected
+        disease_db.sqlmodel_update({
+            **disease_data,
+            "updated_by": current_user.id,
+            "date_updated": datetime.now()
+        })
+        await add_and_refresh_from_db(session, disease_db)
 
-            logger.info(
-                f"Disease <{disease.name}> successfully updated"
-            )
-    except IntegrityError as err:
-        session.rollback()
-        logger.error(str(err.args))
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(err.args[0]),
-        ) from None
-    except Exception as err:
-        session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(err),
-        ) from None
+        logger.info(
+            f"Disease <{disease.name}> successfully updated"
+        )
 
     return disease_db
 
@@ -263,7 +214,6 @@ async def update_report(
     #         detail=str("Report cannot be modified"),
     #     )
 
-    try:
         # Updating existing Report
         report_data = report.model_dump(exclude_unset=True)
         # TODO: updated_by should come from authentication/authorization process
@@ -272,26 +222,11 @@ async def update_report(
             "updated_by": 1,
             "date_updated": datetime.now()
         })
-        session.add(report_db)
-        session.commit()
-        session.refresh(report_db)
+        await add_and_refresh_from_db(session, report_db)
 
         logger.info(
             f"Report <{id}> successfully updated"
         )
-    except IntegrityError as err:
-        session.rollback()
-        logger.error(str(err.args))
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(err.args[0]),
-        ) from None
-    except Exception as err:
-        session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(err),
-        ) from None
 
     return report_db
 
