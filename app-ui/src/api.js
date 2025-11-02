@@ -76,7 +76,7 @@ export const postPatient = async (patient) => {
 };
 
 export const postDisease = async (disease) => {
-    const result = await Api.post('post', `/reports/${disease.id}/disease`, disease);
+    const result = await sendRequest('post', `/reports/${disease.id}/disease`, disease);
     return result;
 };
 
