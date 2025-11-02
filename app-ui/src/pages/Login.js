@@ -1,8 +1,8 @@
 import  { useState } from 'react';
 import  { Navigate } from 'react-router-dom'
+import { getToken } from '../api'
 import './Login.css';
 
-import axios from 'axios';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -24,7 +24,8 @@ const Login = () => {
         requestBody.append(key, value);
       }
 
-      const response = await axios.post('https://localhost:8000/token', requestBody);
+      const response = await getToken(requestBody);
+      console.log({response}, "response from getToken");
       sessionStorage.setItem("access_token", response.data.access_token);
 
       setResponseMessage(`Success: ${response.data.access_token}`);
