@@ -10,6 +10,7 @@
 }
 
 .flex-row {
+  min-width: 40%;
   display: flex;
   flex-direction: column;
 }
@@ -33,7 +34,7 @@
 }
 
 .select-button {
-  min-width: 13.5em;
+  min-width: 40%;
 }
 
 .formfield-label {
