@@ -193,7 +193,6 @@ async def create_disease(
 
     try:
         if not disease_db:
-            print("--------creating a new one----------")
             # Creating a new Disease record
             disease_db = Disease(
                 **disease.model_dump(),
@@ -209,7 +208,6 @@ async def create_disease(
                 f"Disease <{disease.name}> successfully created"
             )
         else:
-            print("-------- updating an existing one ----------")
             # Updating an existing Disease
             disease_data = disease.model_dump(exclude_unset=True)
             # leave this date unchanged
@@ -259,11 +257,11 @@ async def update_report(
             detail=str("Report does not exist"),
         )
 
-    if report_db.status != ReportStatus.draft:
-        raise HTTPException(
-            status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
-            detail=str("Report cannot be modified"),
-        )
+    # if report_db.status != ReportStatus.draft:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+    #         detail=str("Report cannot be modified"),
+    #     )
 
     try:
         # Updating existing Report
@@ -346,25 +344,24 @@ async def get_recent(
     current_user: Annotated[ReporterBase, Depends(get_current_user)],
 ) -> ReportResponse:
     logger.info("Recent submission")
-    # try:
+    try:
     # Is it only going to return "Submitted" reports?
-    report = session.exec(
-        select(Report)
-            .where(Report.status == ReportStatus.submitted)
-            .order_by(desc(Report.date_updated))
-    ).first()
-    reporter = (
-        session.exec(select(Reporter).where(Reporter.id == report.reporter_id)).first()
-    )
-    patient = session.exec(select(Patient).where(Patient.id == report.patient_id)).first()
-    disease = session.exec(select(Disease).where(Disease.id == report.disease_id)).first()
-    print(f"{reporter}\n{patient}\n{disease}")
-    print()
-    # except Exception as err:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-    #         detail=str(err),
-    #     ) from None
+        report = session.exec(
+            select(Report)
+                .where(Report.status == ReportStatus.submitted)
+                .order_by(desc(Report.date_updated))
+        ).first()
+        reporter = (
+            session.exec(select(Reporter).where(Reporter.id == report.reporter_id)).first()
+        )
+        patient = session.exec(select(Patient).where(Patient.id == report.patient_id)).first()
+        disease = session.exec(select(Disease).where(Disease.id == report.disease_id)).first()
+
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(err),
+        ) from None
     raport_data = ReportResponse(
         **{
             **report.model_dump(),
@@ -490,27 +487,31 @@ async def get_reports(
     return all_results
 
 
-@router.get("/reports/{id}/reporter", summary="Get reporter details", tags=["reporter"])
-async def get_reporter(
-    id: int,
-    session: SessionDep,
-    current_user: Annotated[ReporterBase, Depends(get_current_user)],
-) -> Reporter:
+async def get_entity(session, model, id):
     try:
-        reporter = session.get(Reporter, id)
+        entity = session.get(model, id)
     except Exception as err:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(err),
         ) from None
 
-    if not reporter:
+    if not entity:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=str("Reporter does not exist"),
+            detail=str("The Disease record was not found"),
         )
 
-    return reporter
+    return entity
+
+
+@router.get("/reports/{id}/reporter", summary="Get reporter details", tags=["reporter"])
+async def get_reporter(
+    id: int,
+    session: SessionDep,
+    current_user: Annotated[ReporterBase, Depends(get_current_user)],
+) -> Reporter:
+    return await get_entity(session, Reporter, id)
 
 
 @router.get("/reports/{id}/patient", summary="Get patient details", tags=["patient"])
@@ -519,21 +520,7 @@ async def get_patient(
     session: SessionDep,
     current_user: Annotated[ReporterBase, Depends(get_current_user)],
 ):
-    try:
-        patient = session.get(Patient, id)
-    except Exception as err:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(err),
-        ) from None
-
-    if not patient:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str("Patient does not exist"),
-        )
-
-    return patient
+    return await get_entity(session, Patient, id)
 
 
 @router.get("/reports/{id}/disease", summary="Get disease details", tags=["disease"])
@@ -542,18 +529,4 @@ async def get_disease(
     session: SessionDep,
     current_user: Annotated[ReporterBase, Depends(get_current_user)],
 ):
-    try:
-        disease = session.get(Disease, id)
-    except Exception as err:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(err),
-        ) from None
-
-    if not disease:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str("The Disease record was not found"),
-        )
-
-    return disease
+    return await get_entity(session, Disease, id)
