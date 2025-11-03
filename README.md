@@ -91,4 +91,20 @@ To be able to use the API, the connection (user) has to be authenticated. Please
 
 ## Database and setting up the user
 
-WIP...
+run (for development purposes):
+
+```bash
+./ve/bin/python populate_db.py
+```
+
+to populate DB, then you'll be able to login as `johndoe` (username) and type in `secret` as password.
+
+## Docker
+
+docker compose can be run, but it needs the external network to be present, so first run this:
+
+```bash
+docker network create dors-net
+```
+
+then you can run docker compose.

@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+# Name your docker image
+name=dors-ui
+
+# Build docker image
+docker build -t $name .
+
+# Run the image. Edit the env var to point to the right api server
+docker run -e REACT_APP_API_URL="https://apiserver:8000" -p 80:80 $name

@@ -1,0 +1,37 @@
+services:
+
+  apiserver:
+    container_name: apiserver
+    hostname: apiserver
+    image: apiserver
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - 8000:8000
+    working_dir: /code
+    volumes:
+      - ./:/code
+    environment:
+      DB_URL: sqlite:///database.db
+    networks:
+      - dors-net
+
+  dors-ui:
+    image: dors-ui
+    container_name: dors-ui
+    hostname: dors-ui
+    build:
+      context: ./app-ui
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - 80:80
+    networks:
+      - dors-net
+
+
+networks:
+  dors-net:
+    external: true

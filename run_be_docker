@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+# Name your docker image
+name=apiserver
+
+# # Build docker image
+# docker build -t $name .
+
+# Run the image. Edit the DB_URL to point to the right DB
+docker run -e DB_URL="sqlite:///database.db" -p 8000:8000 $name

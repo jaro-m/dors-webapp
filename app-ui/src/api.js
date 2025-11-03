@@ -11,7 +11,7 @@ export const Api = axios.create({
 
 export const getToken = async (requestBody) => {
   try {
-    const response = await Api.post(`${baseURL}/token`, requestBody);
+    const response = await axios.post(`${baseURL}/token`, requestBody);
     return response;
   } catch(err) {
     throw err
