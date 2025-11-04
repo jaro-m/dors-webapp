@@ -1,9 +1,9 @@
 services:
 
   apiserver:
+    image: apiserver
     container_name: apiserver
     hostname: apiserver
-    image: apiserver
     build:
       context: .
       dockerfile: Dockerfile
@@ -16,7 +16,8 @@ services:
     environment:
       DB_URL: sqlite:///database.db
     networks:
-      - dors-net
+      dorsnet:
+        ipv4_address: 172.28.2.2
 
   dors-ui:
     image: dors-ui
@@ -25,13 +26,22 @@ services:
     build:
       context: ./app-ui
       dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: https://172.28.2.2:8000
     restart: unless-stopped
     ports:
-      - 80:80
+      - 80:3000
+    depends_on:
+      - apiserver
     networks:
-      - dors-net
+      dorsnet:
+        ipv4_address: 172.28.2.3
 
 
 networks:
-  dors-net:
-    external: true
+  dorsnet:
+    # driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16

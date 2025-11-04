@@ -2,7 +2,8 @@
 FROM node:20-alpine AS build
 
 # provide correct API URL
-ENV REACT_APP_API_URL="https://apiserver:8000"
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=${REACT_APP_API_URL}
 WORKDIR /app
 
 COPY package*.json ./
